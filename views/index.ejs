@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <script src="https://checkout.stripe.com/checkout.js"></script> -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <form id="stripe-form">
+        <label for="name">Enter name</label>
+        <input type="text" id="name" name="name" required>
+        <br />
+        <br />
+        <label for="quantity">Enter quantity</label>
+        <input type="number" id="quantity" name="quantity" required>
+        <br />
+        <br />
+        <label for="amount">Enter amount</label>
+        <input type="text" id="amount" name="amount" required>
+        <br />
+        <br />
+        <button type="submit" onclick="purchase(event)">send</button>
+    </form>
+    <script>
+        var stripePublicKey = '<%= stripePublicKey %>'
+        console.log(stripePublicKey)
+        var stripe = Stripe(stripePublicKey)
+        var form = document.getElementById('stripe-form')
+        // var stripeHandler = stripe.elements({
+        //     key: stripePublicKey,
+        //     locale: 'en',
+        //     token: function (token) {
+        //         console.log(token)
+        //     }
+        // })
+        function purchase(e) {
+            e.preventDefault()
+            const data = new URLSearchParams(new FormData(form));
+            fetch('/create-checkout-session', {
+                method: 'POST',
+                body: data
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (session) {
+                    return stripe.redirectToCheckout({ sessionId: session.id });
+                })
+                .then(function (result) {
+                    // If `redirectToCheckout` fails due to a browser or network
+                    // error, you should display the localized error message to your
+                    // customer using `error.message`.
+                    if (result.error) {
+                        alert(result.error.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                });
+            // var amount = parseInt(document.getElementById('amount').innerText)
+            // stripeHandler.open({
+            //     amount: amount
+            // })
+        }
+    </script>
+</body>
+
+</html>
